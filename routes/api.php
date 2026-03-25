@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ConfigController;
+use App\Http\Controllers\GuestController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\StatsController;
 use App\Http\Controllers\UserController;
@@ -18,6 +19,7 @@ Route::middleware('auth:api')->group(function () {
     Route::put('/key', [UserController::class, 'regenerateKey']);
     Route::get('/stats', [StatsController::class, 'index']);
     Route::get('/download', [CommentController::class, 'download']);
+    Route::get('/guests', [GuestController::class, 'index']);
 });
 
 // Guest (access key or JWT)
