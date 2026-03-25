@@ -25,6 +25,7 @@ Route::middleware('auth:api')->group(function () {
 // Guest (access key or JWT)
 Route::middleware(AccessKeyAuth::class)->group(function () {
     Route::get('/v2/config', [ConfigController::class, 'show']);
+    Route::get('/v2/comment/stream', [CommentController::class, 'stream']);
     Route::get('/v2/comment', [CommentController::class, 'index']);
     Route::post('/comment', [CommentController::class, 'store']);
     Route::put('/comment/{own}', [CommentController::class, 'update']);

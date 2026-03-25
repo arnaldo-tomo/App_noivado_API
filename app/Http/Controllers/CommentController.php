@@ -218,6 +218,47 @@ class CommentController extends Controller
         return base64_encode((string) $id);
     }
 
+    public function stream(Request $request): \Symfony\Component\HttpFoundation\StreamedResponse
+    {
+        $user = auth()->user();
+        $since = $request->query('since', now()->subMinutes(1)->toIso8601String());
+
+        return response()->stream(function () use ($user, $since) {
+            $lastCheck = $since;
+
+            for ($i = 0; $i < 10; $i++) {
+                if (connection_aborted()) break;
+
+                $newComments = Comment::where('user_id', $user->id)
+                    ->where('created_at', '>', $lastCheck)
+                    ->withCount('likes')
+                    ->orderBy('created_at', 'asc')
+                    ->get();
+
+                if ($newComments->isNotEmpty()) {
+                    $lastCheck = $newComments->last()->created_at->toIso8601String();
+                    $data = $newComments->map->toApiResponse()->values()->toArray();
+                    echo "data: " . json_encode(['comments' => $data, 'since' => $lastCheck]) . "\n\n";
+                } else {
+                    echo ": heartbeat\n\n";
+                }
+
+                if (ob_get_level()) ob_flush();
+                flush();
+                sleep(3);
+            }
+
+            echo "retry: 1000\n\n";
+            if (ob_get_level()) ob_flush();
+            flush();
+        }, 200, [
+            'Content-Type' => 'text/event-stream',
+            'Cache-Control' => 'no-cache',
+            'Connection' => 'keep-alive',
+            'X-Accel-Buffering' => 'no',
+        ]);
+    }
+
     private function decodeNext(string $next): int
     {
         return (int) base64_decode($next);

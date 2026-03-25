@@ -19,8 +19,8 @@ class AccessKeyAuth
             }
         }
 
-        // Try access key
-        $accessKey = $request->header('x-access-key');
+        // Try access key from header or query param (for SSE which can't send headers)
+        $accessKey = $request->header('x-access-key') ?? $request->query('token');
         if ($accessKey) {
             $user = User::where('access_key', $accessKey)->first();
             if ($user) {
